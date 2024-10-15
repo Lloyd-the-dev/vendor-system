@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Register Form</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="wrapper">
+        <form action="register.php" method="POST">
+          <h2>Register</h2>
+            <div class="input-field">
+                <input type="text" name="firstName" required>
+                <label>Firstname</label>
+            </div>
+            <div class="input-field">
+                <input type="text" name="lastName" required>
+                <label>Lastname</label>
+            </div>
+            <div class="input-field">
+                <input type="text" name="userName" required>
+                <label>Username</label>
+            </div>
+            <select class="input-field dropdown" readonly required name="accType">
+                <option value="Vendor">Vendor</option>
+                <option value="Client">Client</option>
+            </select>
+            <select class="input-field dropdown" readonly required name="hostel">
+                <option value="Daniel Hall">DANIEL HALL</option>
+                <option value="Joseph Hall">JOSEPH HALL</option>
+                <option value="Deborah Hall">DEBORAH HALL</option>
+                <option value="Mary Hall">MARY HALL</option>
+            </select>
+            <div class="input-field">
+                <input type="text" name="roomNo" required>
+                <label>Room No</label>
+            </div>
+            <div class="input-field">
+                <input type="email" name="email" required>
+                <label>Enter your email</label>
+            </div>
+            <div class="input-field">
+                <input type="password" name="password" required>
+                <label>Enter your password</label>
+            </div>
+          <button type="submit" class="login-btn" name="submit">SignUp</button>
+          <div class="register">
+            <p>Already have an account? <a href="index.html">Login</a></p>
+          </div>
+        </form>
+      </div>
+</body>
+</html>
