@@ -1,0 +1,13 @@
+body{
+    font-family: Arial, Helvetica, sans-serif;
+}
+#caro-item{
+    height: 80vh
+}
+#caro-item img{
+    object-fit: cover;
+}
+#caro-text{
+    font-size: 1.3rem;
+    text-shadow: 0px 0px 20px #242424;
+}

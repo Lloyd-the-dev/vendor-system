@@ -11,21 +11,35 @@
         $email = $_POST["email"];
         $password = $_POST["password"];
 
-        $sql = "INSERT INTO `users` (`firstname`, `lastname`, `username`, `accType`, `hostel`, `roomNo`, `email`, `password`) VALUES 
-        ('$firstName', '$lastName', '$userName', '$accType', '$hostel', '$roomNo', '$email', '$password')";
+        // Query to check if the email already exists
+        $checkEmailQuery = "SELECT * FROM `users` WHERE `email` = '$email'";
+        $result = mysqli_query($conn, $checkEmailQuery);
 
-        $rs = mysqli_query($conn, $sql);
-
-        if($rs)
-        {
+        // If email exists, show an alert and prevent insertion
+        if(mysqli_num_rows($result) > 0) {
             echo '<script type ="text/JavaScript">'; 
-            echo 'alert("Account successfully created!")';
-            echo 'window.location.href = "index.html";';
+            echo 'alert("Email is already registered. Please use a different email!");';
+            echo 'window.location.href = "register.html";'; // Redirect back to registration page or wherever needed
             echo '</script>';  
-        }
+        } else {
+            $sql = "INSERT INTO `users` (`firstname`, `lastname`, `username`, `accType`, `hostel`, `roomNo`, `email`, `password`) VALUES 
+            ('$firstName', '$lastName', '$userName', '$accType', '$hostel', '$roomNo', '$email', '$password')";
 
-        mysqli_close($conn);
+            $rs = mysqli_query($conn, $sql);
+
+            if($rs)
+            {
+                echo '<script type ="text/JavaScript">'; 
+                echo 'alert("Account successfully created!");';
+                echo 'window.location.href = "index.html";';
+                echo '</script>';  
+            }
+
+            mysqli_close($conn);
+        }
+       
     }
 
 
 ?>
+ 
