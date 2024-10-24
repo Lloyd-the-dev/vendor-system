@@ -11,3 +11,36 @@ body{
     font-size: 1.3rem;
     text-shadow: 0px 0px 20px #242424;
 }
+
+#addProductForm {
+    display: flex;
+    flex-direction: column;
+}
+
+#addProductForm label {
+    font-weight: bold;
+    margin-top: 10px;
+}
+
+#addProductForm input {
+    padding: 10px;
+    margin-top: 5px;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    transition: border-color 0.3s ease-in-out;
+}
+
+#addProductForm button {
+    background-color: #3498db;
+    color: white;
+    padding: 10px 15px;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    margin-top: 15px;
+    transition: background-color 0.3s ease-in-out;
+}
+#caro_img{
+    max-height: 270px;
+    object-fit: cover;
+}

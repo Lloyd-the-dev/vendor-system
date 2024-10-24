@@ -1,5 +1,76 @@
 <?php
+    include "config.php";
+    session_start();
+    $firstName = $_SESSION["name"];
+    $role = $_SESSION["role"];
+    $userId =  $_SESSION["user_id"];
 
+    function displayVendorProducts($vendorId) {
+        global $conn;
+        $sql = "SELECT * FROM products WHERE vendor_id = '$vendorId' LIMIT 9";  // Limit to 9 products
+        $result = $conn->query($sql);
+        
+        if ($result->num_rows > 0) {
+            $firstRow = $result->fetch_assoc(); 
+            $storeName = $firstRow['storeName'];
+
+            echo '<section class="pt-5 pb-5 mt-5">';
+            echo '<div class="container">';
+            echo '<div class="row">';
+            echo '<div class="col-6">';
+            echo '<h3 class="mb-3">Best Sellers in '.$storeName.'</h3>';
+            echo '</div>';
+            echo '<div class="col-6 text-right">';
+            echo '<a class="btn btn-primary mb-3 mr-1" href="#carouselExampleIndicators2" role="button" data-slide="prev">';
+            echo '<i class="fa fa-arrow-left"></i>';
+            echo '</a>';
+            echo '<a class="btn btn-primary mb-3" href="#carouselExampleIndicators2" role="button" data-slide="next">';
+            echo '<i class="fa fa-arrow-right"></i>';
+            echo '</a>';
+            echo '</div>';
+            echo '<div class="col-12">';
+            echo '<div id="carouselExampleIndicators2" class="carousel slide" data-ride="carousel">';
+            echo '<div class="carousel-inner">';
+            
+            $result->data_seek(0); 
+            $counter = 0;
+            $row_counter = 0;
+            $active_class = 'active';
+            
+            while ($row = $result->fetch_assoc()) {
+                if ($counter % 3 == 0) { 
+                    if ($row_counter > 0) echo '</div></div>'; 
+                    echo '<div class="carousel-item ' . $active_class . '">';
+                    echo '<div class="row">';
+                    $active_class = ''; 
+                }
+                echo '<div class="col-md-4 mb-3">';
+                echo '<div class="card">';
+                echo '<img class="img-fluid" id="caro_img" alt="' . $row['product_name'] . '" src="' . $row['product_image'] . '">';
+                echo '<div class="card-body">';
+                echo '<h4 class="card-title">' . $row['product_name'] . '</h4>';
+                echo '<p class="card-text">Price: ₦' . $row['price'] . '</p>';
+                echo '<a href="#" class="btn btn-primary btn-block">Order Now</a>'; 
+                echo '</div>';
+                echo '</div>';
+                echo '</div>';
+                
+                $counter++;
+                $row_counter++;
+            }
+            
+            echo '</div></div>'; 
+            echo '</div>';
+            echo '</div>';
+            echo '</div>';
+            echo '</section>';
+            
+        } else {
+            echo "No products found for this vendor.";
+        }
+    }
+    
+    
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -9,8 +80,9 @@
     <title>Landing Dashboard</title>
     <link href='https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css' rel='stylesheet'>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-EVSTQN3/azprG1Anm3QDgpJLIm9Nao0Yz1ztcQTwFspd3yD65VohhpuuCOmLASjC" crossorigin="anonymous"></head>
-    <link rel="stylesheet" href="./css/dashboard.css">
     <link rel="stylesheet" type="text/css" href="https://stackpath.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css">
+    <link rel="stylesheet" href="./css/dashboard.css">
+
     <body>
     <nav class="navbar navbar-expand-lg navbar-dark bg-dark p-3 fs-5">
     <div class="container-fluid">
@@ -27,16 +99,16 @@
                 <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
                     Products
                 </a>
-                <ul class="dropdown-menu" aria-labelledby="navbarDropdown">
-                    <li><a class="dropdown-item" href="#">Maximillian Wears</a></li>
-                    <li><a class="dropdown-item" href="#">Ore's Treats</a></li>
-                    <li><hr class="dropdown-divider"></li>
-                    <li><a class="dropdown-item" href="#">Dave's Store</a></li>
+                <ul class="dropdown-menu" aria-labelledby="navbarDropdown" id="vendorDropdown">
                 </ul>
             </li>
-            <li class="nav-item">
-                <a class="nav-link" href="#"><i class='bx bx-plus-circle' id="nav-icon"></i></a>
-            </li>
+            <?php if($role === "Vendor"){?>
+                <li class="nav-item">
+                    <a class="nav-link" href="#" data-bs-toggle="modal" data-bs-target="#exampleModal">
+                        <i class='bx bx-plus-circle' id="nav-icon"></i>
+                    </a>
+                </li>
+            <?php } ?>
             <li class="nav-item">
                 <a class="nav-link" href="./index.html">Logout</a>
             </li>
@@ -49,6 +121,44 @@
     </div>
     </nav>
 
+    <div class="modal fade" id="exampleModal" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="exampleModalLabel">Add Product</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="addProductForm" action="addProduct.php" method="POST" enctype="multipart/form-data">
+                        <div class="form-group">
+                            <label for="productName">Product Name</label>
+                            <input type="text" class="form-control" id="productName" name="productName" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="productPrice">Product Price</label>
+                            <input type="number" class="form-control" id="productPrice" name="productPrice" min="1" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="productQuantity">Quantity</label>
+                            <input type="number" class="form-control" id="productQuantity" name="productQuantity" min="1" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="productImg">Product Image</label>
+                            <input type="file" class="form-control" id="productImg" name="productImg" required>
+                        </div>
+                        <input type="hidden" id="tonerId" name="tonerId">
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                    <button type="button" class="btn btn-primary" onclick="submitForm()">Add Product</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+
     <div id="carouselExampleCaptions" class="carousel slide" data-bs-ride="carousel">
         <div class="carousel-indicators">
             <button type="button" data-bs-target="#carouselExampleCaptions" data-bs-slide-to="0" class="active" aria-current="true" aria-label="Slide 1"></button>
@@ -59,6 +169,7 @@
             <div class="carousel-item active" id="caro-item">
                 <img src="./img/snacks.jpg" class="w-100 object-fit-cover" alt="...">
                 <div class="carousel-caption d-none d-md-block" id="caro-text">
+                    <h1 style="font-size: 5rem">Hello, <?php echo $firstName; ?></h1>
                     <h5>Ore's Treats</h5>
                     <p>20% off on all snacks and goodies in Ore's Treats.</p>
                 </div>
@@ -67,6 +178,7 @@
             <div class="carousel-item" id="caro-item">
                 <img src="./img/cereal.jpg" class="d-block w-100 object-fit-cover" alt="...">
                 <div class="carousel-caption d-none d-md-block" id="caro-text">
+                    <h1 style="font-size: 5rem">What are you getting today,  <?php echo $firstName; ?>?</h1>
                     <h5>Dave's Store</h5>
                     <p>New stock available in Dave's store, more cereals to your taste.</p>
                 </div>
@@ -75,6 +187,7 @@
             <div class="carousel-item" id="caro-item">
                 <img src="./img/clothes2.jpg" class="d-block w-100 object-fit-cover" alt="...">
                 <div class="carousel-caption d-none d-md-block" id="caro-text">
+                    <h1 style="font-size: 5rem">Hello, <?php echo $firstName; ?></h1>
                     <h5>Maximillian's Wears</h5>
                     <p>See new incoming outfits to up your steeze game.</p>
                 </div>
@@ -90,595 +203,73 @@
         </button>
     </div>
 
-    <section class="pt-5 pb-5 mt-5">
-        <div class="container">
-            <div class="row">
-                <div class="col-6">
-                    <h3 class="mb-3">Best Sellers in Feeding Provision</h3>
-                </div>
-                <div class="col-6 text-right">
-                    <a class="btn btn-primary mb-3 mr-1" 
-                       href="#carouselExampleIndicators2"
-                       role="button"
-                        data-slide="prev">
-                        <i class="fa fa-arrow-left"></i>
-                    </a>
-                    <a class="btn btn-primary mb-3"
-                       href="#carouselExampleIndicators2"
-                       role="button"
-                       data-slide="next">
-                        <i class="fa fa-arrow-right"></i>
-                    </a>
-                </div>
-                <div class="col-12">
-                    <div id="carouselExampleIndicators2" 
-                         class="carousel slide"
-                         data-ride="carousel">
+    <?php  displayVendorProducts(5) ?>
+    <?php  displayVendorProducts(6) ?>
 
-                        <div class="carousel-inner">
-                            <div class="carousel-item active">
-                                <div class="row">
+    
 
-                                    <div class="col-md-4 mb-3">
-                                        <div class="card">
-                                            <img class="img-fluid" 
-                                                 alt="100%x280"
-                                                 src="./img/farm-9.jpg">
-                                            <div class="card-body">
-                                                <h4 class="card-title">
-                                                  Special title treatment</h4>
-                                                <p class="card-text">With supporting text below as a natural lead-in</p>
-                                            </div>
-                                        </div>
-                                    </div>
-                                    <div class="col-md-4 mb-3">
-                                        <div class="card">
-                                            <img class="img-fluid" 
-                                                 alt="100%x280"
-                                                 src="./img/farm-9.jpg">
-                                                 <div class="card-body">
-                                                     <h4 class="card-title">
-                                                       Special title treatment</h4>
-                                                     <p class="card-text">With supporting text below as a natural lead-in</p>
-                                                </div>
-                                        </div>
-                                    </div>
-                                    <div class="col-md-4 mb-3">
-                                        <div class="card">
-                                            <img class="img-fluid" 
-                                                 alt="100%x280"
-                                                 src="./img/farm-9.jpg">
-                                                 <div class="card-body">
-                                                     <h4 class="card-title">
-                                                       Special title treatment</h4>
-                                                     <p class="card-text">With supporting text below as a natural lead-in</p>
-                                                </div>
-                                        </div>
-                                    </div>
+    
+    <script>
+        document.addEventListener("DOMContentLoaded", function() {
+        // Fetch vendor store names when the page loads
+        fetchVendorStoreNames();
+    });
 
-                                </div>
-                            </div>
-                            <div class="carousel-item">
-                                <div class="row">
+    function fetchVendorStoreNames() {
+        // Perform an AJAX request to get vendor store names
+        let xhr = new XMLHttpRequest();
+        xhr.open("GET", "fetchVendors.php", true);
+        xhr.onreadystatechange = function() {
+            if(xhr.readyState === 4 && xhr.status === 200) {
+                // Parse the JSON response
+                let storeNames = JSON.parse(xhr.responseText);
+                
+                // Get the vendor dropdown element
+                let vendorDropdown = document.getElementById("vendorDropdown");
+                
+                // Clear existing dropdown items
+                vendorDropdown.innerHTML = '';
 
-                                    <div class="col-md-4 mb-3">
-                                        <div class="card">
-                                            <img class="img-fluid" 
-                                                 alt="100%x280"
-                                                 src="./img/farm-8.jpg">
-                                                 <div class="card-body">
-                                                     <h4 class="card-title">
-                                                       Special title treatment</h4>
-                                                     <p class="card-text">With supporting text below as a natural lead-in</p>
-                                                </div>
-                                        </div>
-                                    </div>
-                                    <div class="col-md-4 mb-3">
-                                        <div class="card">
-                                            <img class="img-fluid" alt="100%x280"
-                                            src="./img/farm-8.jpg">
-                                            <div class="card-body">
-                                                <h4 class="card-title">
-                                                  Special title treatment</h4>
-                                                <p class="card-text">With supporting text below as a natural lead-in</p>
-                                           </div>
-                                        </div>
-                                    </div>
-                                    <div class="col-md-4 mb-3">
-                                        <div class="card">
-                                            <img class="img-fluid" alt="100%x280"
-                                            src="./img/farm-8.jpg">
-                                            <div class="card-body">
-                                                <h4 class="card-title">
-                                                  Special title treatment</h4>
-                                                <p class="card-text">With supporting text below as a natural lead-in</p>
-                                            </div>
-                                        </div>
-                                    </div>
+                // Add each store name as a dropdown item
+                storeNames.forEach(function(storeName) {
+                    let listItem = document.createElement("li");
+                    let link = document.createElement("a");
+                    link.className = "dropdown-item";
+                    link.href = "#";
+                    link.textContent = storeName;
 
-                                </div>
-                            </div>
-                            <div class="carousel-item">
-                                <div class="row">
+                    listItem.appendChild(link);
+                    vendorDropdown.appendChild(listItem);
 
-                                    <div class="col-md-4 mb-3">
-                                        <div class="card">
-                                            <img class="img-fluid" 
-                                                 alt="100%x280"
-                                                 src="./img/farm-6.jpg">
-                                                 <div class="card-body">
-                                                     <h4 class="card-title">
-                                                       Special title treatment</h4>
-                                                     <p class="card-text">With supporting text below as a natural lead-in</p>
-                                                 </div>
-                                        </div>
-                                    </div>
-                                    <div class="col-md-4 mb-3">
-                                        <div class="card">
-                                            <img class="img-fluid" alt="100%x280"
-                                            src="./img/farm-6.jpg">
-                                            <div class="card-body">
-                                                <h4 class="card-title">
-                                                  Special title treatment</h4>
-                                                <p class="card-text">With supporting text below as a natural lead-in</p>
-                                           </div>
-                                        </div>
-                                    </div>
-                                    <div class="col-md-4 mb-3">
-                                        <div class="card">
-                                            <img class="img-fluid" 
-                                                 alt="100%x280"
-                                                 src="./img/farm-6.jpg">
-                                            <div class="card-body">
-                                                <h4 class="card-title">
-                                                  Special title treatment</h4>
-                                                <p class="card-text">With supporting text below as a natural lead-in</p>
-                                           </div>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </section>
+                    let divider = document.createElement("li");
+                    divider.innerHTML = '<hr class="dropdown-divider">';
+                    vendorDropdown.appendChild(divider);
+                });
+            }
+        };
+        xhr.send();
+    }
 
-    <section class="pt-5 pb-5">
-        <div class="container">
-            <div class="row">
-                <div class="col-6">
-                    <h3 class="mb-3">Best Sellers in Snacks and Treats</h3>
-                </div>
-                <div class="col-6 text-right">
-                    <a class="btn btn-primary mb-3 mr-1" 
-                       href="#carouselExampleIndicators2"
-                       role="button"
-                        data-slide="prev">
-                        <i class="fa fa-arrow-left"></i>
-                    </a>
-                    <a class="btn btn-primary mb-3"
-                       href="#carouselExampleIndicators2"
-                       role="button"
-                       data-slide="next">
-                        <i class="fa fa-arrow-right"></i>
-                    </a>
-                </div>
-                <div class="col-12">
-                    <div id="carouselExampleIndicators2" 
-                         class="carousel slide"
-                         data-ride="carousel">
-
-                        <div class="carousel-inner">
-                            <div class="carousel-item active">
-                                <div class="row">
-
-                                    <div class="col-md-4 mb-3">
-                                        <div class="card">
-                                            <img class="img-fluid" 
-                                                 alt="100%x280"
-                                                 src="./img/farm-9.jpg">
-                                            <div class="card-body">
-                                                <h4 class="card-title">
-                                                  Special title treatment</h4>
-                                                <p class="card-text">With supporting text below as a natural lead-in</p>
-                                            </div>
-                                        </div>
-                                    </div>
-                                    <div class="col-md-4 mb-3">
-                                        <div class="card">
-                                            <img class="img-fluid" 
-                                                 alt="100%x280"
-                                                 src="./img/farm-9.jpg">
-                                                 <div class="card-body">
-                                                     <h4 class="card-title">
-                                                       Special title treatment</h4>
-                                                     <p class="card-text">With supporting text below as a natural lead-in</p>
-                                                </div>
-                                        </div>
-                                    </div>
-                                    <div class="col-md-4 mb-3">
-                                        <div class="card">
-                                            <img class="img-fluid" 
-                                                 alt="100%x280"
-                                                 src="./img/farm-9.jpg">
-                                                 <div class="card-body">
-                                                     <h4 class="card-title">
-                                                       Special title treatment</h4>
-                                                     <p class="card-text">With supporting text below as a natural lead-in</p>
-                                                </div>
-                                        </div>
-                                    </div>
-
-                                </div>
-                            </div>
-                            <div class="carousel-item">
-                                <div class="row">
-
-                                    <div class="col-md-4 mb-3">
-                                        <div class="card">
-                                            <img class="img-fluid" 
-                                                 alt="100%x280"
-                                                 src="./img/farm-8.jpg">
-                                                 <div class="card-body">
-                                                     <h4 class="card-title">
-                                                       Special title treatment</h4>
-                                                     <p class="card-text">With supporting text below as a natural lead-in</p>
-                                                </div>
-                                        </div>
-                                    </div>
-                                    <div class="col-md-4 mb-3">
-                                        <div class="card">
-                                            <img class="img-fluid" alt="100%x280"
-                                            src="./img/farm-8.jpg">
-                                            <div class="card-body">
-                                                <h4 class="card-title">
-                                                  Special title treatment</h4>
-                                                <p class="card-text">With supporting text below as a natural lead-in</p>
-                                           </div>
-                                        </div>
-                                    </div>
-                                    <div class="col-md-4 mb-3">
-                                        <div class="card">
-                                            <img class="img-fluid" alt="100%x280"
-                                            src="./img/farm-8.jpg">
-                                            <div class="card-body">
-                                                <h4 class="card-title">
-                                                  Special title treatment</h4>
-                                                <p class="card-text">With supporting text below as a natural lead-in</p>
-                                            </div>
-                                        </div>
-                                    </div>
-
-                                </div>
-                            </div>
-                            <div class="carousel-item">
-                                <div class="row">
-
-                                    <div class="col-md-4 mb-3">
-                                        <div class="card">
-                                            <img class="img-fluid" 
-                                                 alt="100%x280"
-                                                 src="./img/farm-6.jpg">
-                                                 <div class="card-body">
-                                                     <h4 class="card-title">
-                                                       Special title treatment</h4>
-                                                     <p class="card-text">With supporting text below as a natural lead-in</p>
-                                                 </div>
-                                        </div>
-                                    </div>
-                                    <div class="col-md-4 mb-3">
-                                        <div class="card">
-                                            <img class="img-fluid" alt="100%x280"
-                                            src="./img/farm-6.jpg">
-                                            <div class="card-body">
-                                                <h4 class="card-title">
-                                                  Special title treatment</h4>
-                                                <p class="card-text">With supporting text below as a natural lead-in</p>
-                                           </div>
-                                        </div>
-                                    </div>
-                                    <div class="col-md-4 mb-3">
-                                        <div class="card">
-                                            <img class="img-fluid" 
-                                                 alt="100%x280"
-                                                 src="./img/farm-6.jpg">
-                                            <div class="card-body">
-                                                <h4 class="card-title">
-                                                  Special title treatment</h4>
-                                                <p class="card-text">With supporting text below as a natural lead-in</p>
-                                           </div>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </section>
-
-    <section class="pt-5 pb-5">
-        <div class="container">
-            <div class="row">
-                <div class="col-6">
-                    <h3 class="mb-3">Best Sellers in Fashion</h3>
-                </div>
-                <div class="col-6 text-right">
-                    <a class="btn btn-primary mb-3 mr-1" 
-                       href="#carouselExampleIndicators2"
-                       role="button"
-                        data-slide="prev">
-                        <i class="fa fa-arrow-left"></i>
-                    </a>
-                    <a class="btn btn-primary mb-3"
-                       href="#carouselExampleIndicators2"
-                       role="button"
-                       data-slide="next">
-                        <i class="fa fa-arrow-right"></i>
-                    </a>
-                </div>
-                <div class="col-12">
-                    <div id="carouselExampleIndicators2" 
-                         class="carousel slide"
-                         data-ride="carousel">
-
-                        <div class="carousel-inner">
-                            <div class="carousel-item active">
-                                <div class="row">
-
-                                    <div class="col-md-4 mb-3">
-                                        <div class="card">
-                                            <img class="img-fluid" 
-                                                 alt="100%x280"
-                                                 src="./img/farm-9.jpg">
-                                            <div class="card-body">
-                                                <h4 class="card-title">
-                                                  Special title treatment</h4>
-                                                <p class="card-text">With supporting text below as a natural lead-in</p>
-                                            </div>
-                                        </div>
-                                    </div>
-                                    <div class="col-md-4 mb-3">
-                                        <div class="card">
-                                            <img class="img-fluid" 
-                                                 alt="100%x280"
-                                                 src="./img/farm-9.jpg">
-                                                 <div class="card-body">
-                                                     <h4 class="card-title">
-                                                       Special title treatment</h4>
-                                                     <p class="card-text">With supporting text below as a natural lead-in</p>
-                                                </div>
-                                        </div>
-                                    </div>
-                                    <div class="col-md-4 mb-3">
-                                        <div class="card">
-                                            <img class="img-fluid" 
-                                                 alt="100%x280"
-                                                 src="./img/farm-9.jpg">
-                                                 <div class="card-body">
-                                                     <h4 class="card-title">
-                                                       Special title treatment</h4>
-                                                     <p class="card-text">With supporting text below as a natural lead-in</p>
-                                                </div>
-                                        </div>
-                                    </div>
-
-                                </div>
-                            </div>
-                            <div class="carousel-item">
-                                <div class="row">
-
-                                    <div class="col-md-4 mb-3">
-                                        <div class="card">
-                                            <img class="img-fluid" 
-                                                 alt="100%x280"
-                                                 src="./img/farm-8.jpg">
-                                                 <div class="card-body">
-                                                     <h4 class="card-title">
-                                                       Special title treatment</h4>
-                                                     <p class="card-text">With supporting text below as a natural lead-in</p>
-                                                </div>
-                                        </div>
-                                    </div>
-                                    <div class="col-md-4 mb-3">
-                                        <div class="card">
-                                            <img class="img-fluid" alt="100%x280"
-                                            src="./img/farm-8.jpg">
-                                            <div class="card-body">
-                                                <h4 class="card-title">
-                                                  Special title treatment</h4>
-                                                <p class="card-text">With supporting text below as a natural lead-in</p>
-                                           </div>
-                                        </div>
-                                    </div>
-                                    <div class="col-md-4 mb-3">
-                                        <div class="card">
-                                            <img class="img-fluid" alt="100%x280"
-                                            src="./img/farm-8.jpg">
-                                            <div class="card-body">
-                                                <h4 class="card-title">
-                                                  Special title treatment</h4>
-                                                <p class="card-text">With supporting text below as a natural lead-in</p>
-                                            </div>
-                                        </div>
-                                    </div>
-
-                                </div>
-                            </div>
-                            <div class="carousel-item">
-                                <div class="row">
-
-                                    <div class="col-md-4 mb-3">
-                                        <div class="card">
-                                            <img class="img-fluid" 
-                                                 alt="100%x280"
-                                                 src="./img/farm-6.jpg">
-                                                 <div class="card-body">
-                                                     <h4 class="card-title">
-                                                       Special title treatment</h4>
-                                                     <p class="card-text">With supporting text below as a natural lead-in</p>
-                                                 </div>
-                                        </div>
-                                    </div>
-                                    <div class="col-md-4 mb-3">
-                                        <div class="card">
-                                            <img class="img-fluid" alt="100%x280"
-                                            src="./img/farm-6.jpg">
-                                            <div class="card-body">
-                                                <h4 class="card-title">
-                                                  Special title treatment</h4>
-                                                <p class="card-text">With supporting text below as a natural lead-in</p>
-                                           </div>
-                                        </div>
-                                    </div>
-                                    <div class="col-md-4 mb-3">
-                                        <div class="card">
-                                            <img class="img-fluid" 
-                                                 alt="100%x280"
-                                                 src="./img/farm-6.jpg">
-                                            <div class="card-body">
-                                                <h4 class="card-title">
-                                                  Special title treatment</h4>
-                                                <p class="card-text">With supporting text below as a natural lead-in</p>
-                                           </div>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </section>
+    function submitForm() {
+        const form = document.getElementById('addProductForm');
+        form.submit();
+    }
+    function submitForm() {
+        // Get the form
+        var form = document.getElementById('addProductForm');
+        
+        // Check if form inputs are valid
+        if (form.checkValidity()) {
+            // Submit the form
+            form.submit();
+        } else {
+            // If form is invalid, show the validation messages
+            form.reportValidity();
+        }
+    }
 
 
-    <!-- Footer -->
-    <footer class="text-center text-lg-start bg-dark text-muted">
-    <!-- Section: Social media -->
-    <section class="d-flex justify-content-center justify-content-lg-between p-4 border-bottom">
-        <!-- Left -->
-        <div class="me-5 d-none d-lg-block">
-        <span>Get connected with us on social networks:</span>
-        </div>
-        <!-- Left -->
-
-        <!-- Right -->
-        <div>
-        <a href="" class="me-4 text-reset">
-            <i class="fab fa-facebook-f"></i>
-        </a>
-        <a href="" class="me-4 text-reset">
-            <i class="fab fa-twitter"></i>
-        </a>
-        <a href="" class="me-4 text-reset">
-            <i class="fab fa-google"></i>
-        </a>
-        <a href="" class="me-4 text-reset">
-            <i class="fab fa-instagram"></i>
-        </a>
-        <a href="" class="me-4 text-reset">
-            <i class="fab fa-linkedin"></i>
-        </a>
-        <a href="" class="me-4 text-reset">
-            <i class="fab fa-github"></i>
-        </a>
-        </div>
-        <!-- Right -->
-    </section>
-    <!-- Section: Social media -->
-
-    <!-- Section: Links  -->
-    <section class="">
-        <div class="container text-center text-md-start mt-5">
-        <!-- Grid row -->
-        <div class="row mt-3">
-            <!-- Grid column -->
-            <div class="col-md-3 col-lg-4 col-xl-3 mx-auto mb-4">
-            <!-- Content -->
-            <h6 class="text-uppercase fw-bold mb-4">
-                <i class="fas fa-gem me-3"></i>Company name
-            </h6>
-            <p>
-                Here you can use rows and columns to organize your footer content. Lorem ipsum
-                dolor sit amet, consectetur adipisicing elit.
-            </p>
-            </div>
-            <!-- Grid column -->
-
-            <!-- Grid column -->
-            <div class="col-md-2 col-lg-2 col-xl-2 mx-auto mb-4">
-            <!-- Links -->
-            <h6 class="text-uppercase fw-bold mb-4">
-                Products
-            </h6>
-            <p>
-                <a href="#!" class="text-reset">Angular</a>
-            </p>
-            <p>
-                <a href="#!" class="text-reset">React</a>
-            </p>
-            <p>
-                <a href="#!" class="text-reset">Vue</a>
-            </p>
-            <p>
-                <a href="#!" class="text-reset">Laravel</a>
-            </p>
-            </div>
-            <!-- Grid column -->
-
-            <!-- Grid column -->
-            <div class="col-md-3 col-lg-2 col-xl-2 mx-auto mb-4">
-            <!-- Links -->
-            <h6 class="text-uppercase fw-bold mb-4">
-                Useful links
-            </h6>
-            <p>
-                <a href="#!" class="text-reset">Pricing</a>
-            </p>
-            <p>
-                <a href="#!" class="text-reset">Settings</a>
-            </p>
-            <p>
-                <a href="#!" class="text-reset">Orders</a>
-            </p>
-            <p>
-                <a href="#!" class="text-reset">Help</a>
-            </p>
-            </div>
-            <!-- Grid column -->
-
-            <!-- Grid column -->
-            <div class="col-md-4 col-lg-3 col-xl-3 mx-auto mb-md-0 mb-4">
-            <!-- Links -->
-            <h6 class="text-uppercase fw-bold mb-4">Contact</h6>
-            <p><i class="fas fa-home me-3"></i> New York, NY 10012, US</p>
-            <p>
-                <i class="fas fa-envelope me-3"></i>
-                info@example.com
-            </p>
-            <p><i class="fas fa-phone me-3"></i> + 01 234 567 88</p>
-            <p><i class="fas fa-print me-3"></i> + 01 234 567 89</p>
-            </div>
-            <!-- Grid column -->
-        </div>
-        <!-- Grid row -->
-        </div>
-    </section>
-    <!-- Section: Links  -->
-
-    <!-- Copyright -->
-    <div class="text-center p-4" style="background-color: rgba(0, 0, 0, 0.05);">
-        © 2021 Copyright:
-        <a class="text-reset fw-bold" href="https://mdbootstrap.com/">MDBootstrap.com</a>
-    </div>
-    <!-- Copyright -->
-    </footer>
-    <!-- Footer -->
-
+    </script>
     <script type="text/javascript" src="https://code.jquery.com/jquery-3.3.1.slim.min.js"></script>
     <script type="text/javascript"src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.0/umd/popper.min.js"></script>
     <script type="text/javascript"src="https://stackpath.bootstrapcdn.com/bootstrap/4.1.0/js/bootstrap.min.js"></script>

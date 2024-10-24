@@ -17,6 +17,7 @@ body {
   background-position: center;
   background-size: cover;
   padding: 1rem 10px;
+  overflow-x: hidden;
 }
 
 body::before {
@@ -31,7 +32,7 @@ body::before {
 }
 
 .wrapper {
-  width: 600px;
+  width: 40%;
   border-radius: 8px;
   height: 100vh;
   padding: 4rem 2rem;

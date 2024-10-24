@@ -5,6 +5,12 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Register Form</title>
     <link rel="stylesheet" href="./css/style.css">
+    <style>
+        /* Hide the vendor section initially */
+        .vendor-info {
+            display: none;
+        }
+    </style>
 </head>
 <body>
     <div class="wrapper">
@@ -22,10 +28,24 @@
                 <input type="text" name="userName" required>
                 <label>Username</label>
             </div>
-            <select class="input-field dropdown" readonly required name="accType">
+            <select class="input-field dropdown" readonly required name="accType" id="accType">
+                <option value="">Select Account Type</option>
                 <option value="Vendor">Vendor</option>
                 <option value="Client">Client</option>
+                <label>Account Type</label>
             </select>
+
+            <div class="vendor-info">
+                <div class="input-field">
+                    <input type="text" name="storeName">
+                    <label>Store Name</label>
+                </div>
+                <div class="input-field">
+                    <input type="text" name="storeDescription">
+                    <label>Store Description</label>
+                </div>
+            </div>
+
             <select class="input-field dropdown" readonly required name="hostel">
                 <option value="Daniel Hall">DANIEL HALL</option>
                 <option value="Joseph Hall">JOSEPH HALL</option>
@@ -50,5 +70,20 @@
           </div>
         </form>
       </div>
+
+      <script>
+        const accTypeDropdown = document.getElementById('accType');
+        const vendorInfo = document.querySelector('.vendor-info');
+
+        // Listen for changes in the account type dropdown
+        accTypeDropdown.addEventListener('change', function() {
+            if (this.value === 'Vendor') {
+                vendorInfo.style.display = 'block'; // Show vendor info
+            } else {
+                vendorInfo.style.display = 'none'; // Hide vendor info
+            }
+        });
+    </script>
+      
 </body>
 </html>
