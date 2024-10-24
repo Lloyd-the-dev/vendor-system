@@ -90,8 +90,8 @@ if (isset($_GET['vendor_id'])) {
                                     // If the user is the vendor, show "Edit"
                                     echo '<a href="edit_product.php?product_id=' . $product['product_id'] . '" class="btn btn-warning">Edit</a>';
                                 } else {
-                                    // If the user is not the vendor, show "Buy Now"
-                                    echo '<a href="#" class="btn btn-primary">Buy Now</a>';
+                                    // If the user is not the vendor, show "Add to cart"
+                                    echo '<button class="btn btn-primary add-to-cart" data-product-id="' . $product['product_id'] . '" data-product-name="' . $product['product_name'] . '" data-product-price="' . $product['price'] . '">Add to Cart</button>';
                                 }
                                 echo '
                             </div>
@@ -112,6 +112,32 @@ if (isset($_GET['vendor_id'])) {
             fetchVendorStoreNames();
         });
 
+
+        // Add event listener for Add to Cart buttons
+        document.querySelectorAll('.add-to-cart').forEach(button => {
+            button.addEventListener('click', function() {
+                const productId = this.getAttribute('data-product-id');
+                const productName = this.getAttribute('data-product-name');
+                const productPrice = this.getAttribute('data-product-price');
+
+                // Add product to cart using AJAX
+                addToCart(productId, productName, productPrice);
+            });
+        });
+    });
+
+    function addToCart(productId, productName, productPrice) {
+        const xhr = new XMLHttpRequest();
+        xhr.open("POST", "add_to_cart.php", true);
+        xhr.setRequestHeader("Content-Type", "application/x-www-form-urlencoded");
+        xhr.onreadystatechange = function() {
+            if (xhr.readyState === 4 && xhr.status === 200) {
+                alert(xhr.responseText); // Show success message
+            }
+        };
+        xhr.send("product_id=" + productId + "&product_name=" + encodeURIComponent(productName) + "&product_price=" + productPrice);
+    }
+    
         function fetchVendorStoreNames() {
             // Perform an AJAX request to get vendor store names and IDs
             let xhr = new XMLHttpRequest();

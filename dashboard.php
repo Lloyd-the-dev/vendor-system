@@ -4,6 +4,13 @@
     $firstName = $_SESSION["name"];
     $role = $_SESSION["role"];
     $userId =  $_SESSION["user_id"];
+    $orderCountQuery = "SELECT COUNT(*) AS order_count FROM orders WHERE vendor_id = ? OR user_id = ?";
+    $stmt = $conn->prepare($orderCountQuery);
+    $stmt->bind_param("ii", $userId, $userId);
+    $stmt->execute();
+    $orderCountResult = $stmt->get_result();
+    $orderCount = $orderCountResult->fetch_assoc();
+    $stmt->close();
 
     function displayVendorProducts($vendorId) {
         global $conn;
@@ -93,7 +100,7 @@
         <div class="collapse navbar-collapse" id="navbarSupportedContent">
         <ul class="navbar-nav me-auto mb-2 mb-lg-0">
             <li class="nav-item">
-            <a class="nav-link active" aria-current="page" href="dashboard.php">Home</a>
+                <a class="nav-link active" aria-current="page" href="dashboard.php">Home</a>
             </li>
             <li class="nav-item dropdown">
                 <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
@@ -109,6 +116,13 @@
                     </a>
                 </li>
             <?php } ?>
+            <li class="nav-item">
+                <a class="nav-link" href="#" data-bs-toggle="modal" data-bs-target="#exampleModal">
+                        <span id="order-number" class="badge bg-danger"><?php echo $orderCount['order_count']; ?></span>
+                    </i>
+                    <span class="">Orders</span>
+                </a>
+            </li>
             <li class="nav-item">
                 <a class="nav-link" href="./index.html">Logout</a>
             </li>
