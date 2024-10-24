@@ -216,13 +216,13 @@
     });
 
     function fetchVendorStoreNames() {
-        // Perform an AJAX request to get vendor store names
+        // Perform an AJAX request to get vendor store names and IDs
         let xhr = new XMLHttpRequest();
         xhr.open("GET", "fetchVendors.php", true);
         xhr.onreadystatechange = function() {
             if(xhr.readyState === 4 && xhr.status === 200) {
                 // Parse the JSON response
-                let storeNames = JSON.parse(xhr.responseText);
+                let vendors = JSON.parse(xhr.responseText);
                 
                 // Get the vendor dropdown element
                 let vendorDropdown = document.getElementById("vendorDropdown");
@@ -230,17 +230,21 @@
                 // Clear existing dropdown items
                 vendorDropdown.innerHTML = '';
 
-                // Add each store name as a dropdown item
-                storeNames.forEach(function(storeName) {
+                // Add each vendor as a dropdown item
+                vendors.forEach(function(vendor) {
                     let listItem = document.createElement("li");
                     let link = document.createElement("a");
                     link.className = "dropdown-item";
-                    link.href = "#";
-                    link.textContent = storeName;
+                    
+                    // Link to vendor_products.php with vendor_id in query parameter
+                    link.href = "vendor_products.php?vendor_id=" + vendor.vendor_id;
+                    
+                    link.textContent = vendor.storeName;
 
                     listItem.appendChild(link);
                     vendorDropdown.appendChild(listItem);
 
+                    // Add a divider after each item
                     let divider = document.createElement("li");
                     divider.innerHTML = '<hr class="dropdown-divider">';
                     vendorDropdown.appendChild(divider);
@@ -249,6 +253,7 @@
         };
         xhr.send();
     }
+
 
     function submitForm() {
         const form = document.getElementById('addProductForm');
