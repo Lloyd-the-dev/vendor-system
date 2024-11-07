@@ -4,13 +4,10 @@
     $firstName = $_SESSION["name"];
     $role = $_SESSION["role"];
     $userId =  $_SESSION["user_id"];
-    $orderCountQuery = "SELECT COUNT(*) AS order_count FROM orders WHERE vendor_id = ? OR user_id = ?";
-    $stmt = $conn->prepare($orderCountQuery);
-    $stmt->bind_param("ii", $userId, $userId);
-    $stmt->execute();
-    $orderCountResult = $stmt->get_result();
-    $orderCount = $orderCountResult->fetch_assoc();
-    $stmt->close();
+    $cartCount = 0;
+    if (isset($_SESSION['cart'])) {
+        $cartCount = isset($_SESSION['cart'][$userId]) ? count($_SESSION['cart'][$userId]) : 0;
+    }
 
     function displayVendorProducts($vendorId) {
         global $conn;
@@ -57,7 +54,7 @@
                 echo '<div class="card-body">';
                 echo '<h4 class="card-title">' . $row['product_name'] . '</h4>';
                 echo '<p class="card-text">Price: ₦' . $row['price'] . '</p>';
-                echo '<a href="#" class="btn btn-primary btn-block">Order Now</a>'; 
+                echo '<a href="vendor_products.php?vendor_id=' . $vendorId . '" class="btn btn-primary btn-block add-to-cart">Go to more Products</a>';
                 echo '</div>';
                 echo '</div>';
                 echo '</div>';
@@ -117,20 +114,22 @@
                 </li>
             <?php } ?>
             <li class="nav-item">
-                <a class="nav-link" href="#" data-bs-toggle="modal" data-bs-target="#exampleModal">
-                        <span id="order-number" class="badge bg-danger"><?php echo $orderCount['order_count']; ?></span>
-                    </i>
-                    <span class="">Orders</span>
+                <a class="nav-link" href="cart.php">
+                    <i class='bx bx-cart-alt'></i>
+                    <?php if ($cartCount > 0): ?>
+                        <span id="cart-number" class=""><?php echo $cartCount; ?></span>
+                    <?php endif; ?>
                 </a>
             </li>
             <li class="nav-item">
-                <a class="nav-link" href="./index.html">Logout</a>
+                <a class="nav-link" href="user_profile.php">
+                  <i class='bx bx-user'></i>
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" href="./index.html" style="margin-left: 1.6rem">Logout</a>
             </li>
         </ul>
-        <form class="d-flex">
-            <input class="form-control me-2" type="search" placeholder="Search for a product" aria-label="Search">
-            <button class="btn btn-outline-success" type="submit">Search</button>
-        </form>
         </div>
     </div>
     </nav>
@@ -227,6 +226,21 @@
         document.addEventListener("DOMContentLoaded", function() {
         // Fetch vendor store names when the page loads
         fetchVendorStoreNames();
+
+        const cartCount = <?php echo $cartCount; ?>;
+
+        // Display the count in the span with id 'cart-number' only if it exists
+            if(cartCount > 0) {
+                document.getElementById("cart-number").textContent = cartCount;
+                document.getElementById("cart-number").style.backgroundColor = "#d9534f";
+                document.getElementById("cart-number").style.color = "white";
+                document.getElementById("cart-number").style.borderRadius = "50%";
+                document.getElementById("cart-number").style.padding = ".1rem .4rem";
+                document.getElementById("cart-number").style.position = "absolute";
+                document.getElementById("cart-number").style.top = ".7rem";
+                document.getElementById("cart-number").style.left = "22.8rem";
+                document.getElementById("cart-number").style.fontSize = ".7rem";
+            }
     });
 
     function fetchVendorStoreNames() {
@@ -268,6 +282,17 @@
         xhr.send();
     }
 
+     // Add event listener for Add to Cart buttons
+     document.querySelectorAll('.add-to-cart').forEach(button => {
+            button.addEventListener('click', function() {
+                const productId = this.getAttribute('data-product-id');
+                const productName = this.getAttribute('data-product-name');
+                const productPrice = this.getAttribute('data-product-price');
+
+                // Add product to cart using AJAX
+                addToCart(productId, productName, productPrice);
+            });
+        });
 
     function submitForm() {
         const form = document.getElementById('addProductForm');
@@ -290,8 +315,6 @@
 
     </script>
     <script type="text/javascript" src="https://code.jquery.com/jquery-3.3.1.slim.min.js"></script>
-    <script type="text/javascript"src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.0/umd/popper.min.js"></script>
-    <script type="text/javascript"src="https://stackpath.bootstrapcdn.com/bootstrap/4.1.0/js/bootstrap.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.9.2/dist/umd/popper.min.js" integrity="sha384-IQsoLXl5PILFhosVNubq5LC7Qb9DXgDA9i+tQ8Zj3iwWAwPtgFTxbJ8NT4GN1R8p" crossorigin="anonymous"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.min.js" integrity="sha384-cVKIPhGWiC2Al4u+LWgxfKTRIcfu0JTxR+EQDz/bgldoEyl4H0zUF0QKbrJ0EcQF" crossorigin="anonymous"></script>
 </body>
